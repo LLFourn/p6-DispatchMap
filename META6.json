@@ -1,5 +1,5 @@
 {
-    "name" : "OO::Schema",
+    "name" : "DispatchMap",
     "perl" : "6.*",
     "version" : "0.0.1",
     "description" : "A map that uses Perl 6 multi dispatch to link keys to values",
