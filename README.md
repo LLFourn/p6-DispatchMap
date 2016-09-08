@@ -32,18 +32,15 @@ say $map.dispatch(Perl); # get AND invoke the code block
 ## Description
 
 **warning** this is module is experimental and subject to change
-**warning** this module uses unspec'd rakudo internals and could break without warning
 
-DispatchMap wraps some compiler hacks to provide a map like interface
-to associate psudo-signatures to values.
+**warning** this module uses unspec'd raged internals and could break without warning
 
 Perl 6 has a very sophisticated routine dispatch system based on
 finding the candidate that matches the call's arguments most
 narrowly. Unfortunately there is no way (yet) to make use of the
-dispatching logic outside of routine calls builtin to the language.
+dispatching logic outside of routine calls.
 
 This module exposes that logic in a map like interface.
-
 
 ## Methods
 
