@@ -16,7 +16,8 @@ method !add-dispatch(@key,$value) {
         my $param := Parameter.new;
         my $nominal-type := do if .defined {
             nqp::bindattr($param,Parameter,'$!post_constraints',nqp::list(nqp::decont($_)));
-            .WHAT;
+            # use the :D of the type. Rakudo caches it.
+            Metamodel::DefiniteHOW.new_type(:base_type(.WHAT),:definite);
         } else {
             $_;
         }

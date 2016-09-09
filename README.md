@@ -15,7 +15,7 @@ my $map = DispatchMap.new:
              (Str)             => "one string",
              (Stringy)         => "something stringy",
              (Str,Str)         => "two strings",
-             (Any:U) => { "Not sure what this is: {.gist}" };
+             (Any:U) => { "Some tyoe object: {.gist}" };
 
 
 say $map.get(2); #-> an Int!
@@ -24,22 +24,59 @@ say $map.get("foo"); #-> A literal foo;
 say $map.get-all("foo"); #-> ("A literal foo","one string","something stringy");
 say $map.get(π); #-> pi
 say $map.get("foo","bar"); #-> two strings
-say $map.get(Perl); # get the Block;
-say $map.dispatch(Perl); # get AND invoke the code block
-
+say $map.get(Perl); # get the Block as a value -> ;; $_? is raw {  }
+say $map.dispatch(Perl); # Not sure what this is: (Perl)
 ```
 
 ## Description
 
 **warning** this is module is experimental and subject to change
 
-**warning** this module uses unspec'd raged internals and could break without warning
+**warning** this module uses unspec'd rakudo internals and could break without warning
 
 Perl 6 has a very sophisticated routine dispatch system based on
 finding the candidate that matches the call's arguments most
 narrowly. Unfortunately there is no way (yet) to make use of the
 dispatching logic outside of routine calls. This module exposes that
 logic in a map like interface.
+
+The following do the same sort of thing. The main difference is that
+the DispatchMap can be defined at runtime.
+
+``` perl6
+    multi foo(Str:D $str) { "a string: $str" }
+    multi foo(Int:D $int) { "an int: $int"   }
+    multi foo(42)         { "a special int"  }
+
+    say foo("lorem");
+    say foo(42);
+    my $sub = &foo.cando(\("lorem"))[0];
+```
+
+
+```perl6
+    use DispatchMap;
+    my $map = DispatchMap.new(
+        (Str:D) => -> $str { "a string: $str" },
+        (Int:D) => -> $int { "an int: $int" },
+        (42)    => -> $int { "a special int" }
+    );
+    say $map.dispatch("lorem");
+    say $map.dispatch(42);
+    my $block = $map.get("lorem");
+```
+
+Presently, the psudo-signatures you pass to `.new` and `.set` are limited to
+non-slurpy positional parameters. If it's passed a type object that
+will be used as the nominal type of the parameter. If a literal is
+passed the `.WHAT` of the object is used as the nominal type and the
+literal is used as a `where` constraint.
+
+
+
+``` perl6
+
+```
 
 ## Methods
 

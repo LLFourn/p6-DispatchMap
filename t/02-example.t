@@ -1,7 +1,7 @@
 use DispatchMap;
 use Test;
 
-plan 11;
+plan 13;
 
 {
     my $map = DispatchMap.new:
@@ -35,4 +35,14 @@ plan 11;
     is $map.dispatch("foo","bar"),"foobar";
     is-deeply $map.dispatch(<one two>,<three four>),<one two three four>;
     is $map.dispatch(1,2),3;
+}
+
+{
+    my $map = DispatchMap.new(
+        (Str:D) => -> $str { "a string: $str" },
+        (Int:D) => -> $int { "an int: $int" },
+        (42)    => -> $int { "a special int" }
+    );
+    is $map.dispatch("lorem"), "a string: lorem";
+    is $map.dispatch(42),"a special int";
 }
