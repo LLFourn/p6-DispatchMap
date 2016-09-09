@@ -117,7 +117,7 @@ Gets all the values that match the argument in order of narrowness
 ### append(**@args)
 ``` perl6
 my $map = DispatchMap.new( (Int,Array) => "Foo", (Cool) => "Bar" );
-$map.set((Real,Real) => "Super Real!");
+$map.append((Real,Real) => "Super Real!");
 say $map.get(π,τ); #-> Super Real!
 ```
 
