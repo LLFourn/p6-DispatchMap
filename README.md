@@ -21,7 +21,7 @@ my $map = DispatchMap.new:
 say $map.get(2); #-> an Int!
 say $map.get(6); #-> Wow, an Int greater than 5
 say $map.get("foo"); #-> A literal foo;
-say $map.get-all("foo") ~~ ("A literal foo","one string","something stringy");
+say $map.get-all("foo"); #-> ("A literal foo","one string","something stringy");
 say $map.get(π); #-> pi
 say $map.get("foo","bar"); #-> two strings
 say $map.get(Perl); # get the Block;
@@ -38,9 +38,8 @@ say $map.dispatch(Perl); # get AND invoke the code block
 Perl 6 has a very sophisticated routine dispatch system based on
 finding the candidate that matches the call's arguments most
 narrowly. Unfortunately there is no way (yet) to make use of the
-dispatching logic outside of routine calls.
-
-This module exposes that logic in a map like interface.
+dispatching logic outside of routine calls. This module exposes that
+logic in a map like interface.
 
 ## Methods
 
@@ -87,9 +86,10 @@ Returns the map as a list of pairs.
 
 ```perl6
 my $map = DispatchMap.new( (Int,Array) => "Foo", (Cool) => "Bar" );
-say $map.pairs; #-> (Int,Array),"Foo",(Cool),"Bar"
+say $map.list; #-> (Int,Array),"Foo",(Cool),"Bar"
 ```
-Returns the map a list of keys and values
+
+Returns the map a list of keys and values.
 
 ### get(|c)
 
@@ -138,4 +138,4 @@ say $map.dispatch(1,2); #-> 3
 ```
 
 `.dispatch` works like `.get` except the if the result is a `Callable`
-it will invoke it.
+it will invoke it with the arguments you pass to `.dispatch`.
