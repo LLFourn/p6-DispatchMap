@@ -43,30 +43,30 @@ logic in a map like interface.
 The following are different ways of achieving the same result:
 
 ``` perl6
-    class Stuff {
-        multi method foo(Str:D $str) { "a string: $str" }
-        multi method foo(Int:D $int) { "an int: $int"   }
-        multi method foo(42)         { "a special int"  }
-    }
+class Stuff {
+    multi method foo(Str:D $str) { "a string: $str" }
+    multi method foo(Int:D $int) { "an int: $int"   }
+    multi method foo(42)         { "a special int"  }
+}
 
-    say Stuff.foo("lorem");
-    say Stuff.foo(42);
-    my $meth = Stuff.find_method("foo").cando(\("lorem"))[0];
+say Stuff.foo("lorem");
+say Stuff.foo(42);
+my $meth = Stuff.find_method("foo").cando(\("lorem"))[0];
 ```
 
 
 ```perl6
-    use DispatchMap;
-    my $map = DispatchMap.new(
-        foo => (
-            (Str:D) => -> $str { "a string: $str" },
-            (Int:D) => -> $int { "an int: $int" },
-            (21 + 21)    => -> $int { "a special int" }
-        )
-    );
-    say $map.dispatch("foo","lorem");
-    say $map.dispatch("foo",42);
-    my $block = $map.get("foo","lorem");
+use DispatchMap;
+my $map = DispatchMap.new(
+    foo => (
+        (Str:D) => -> $str { "a string: $str" },
+        (Int:D) => -> $int { "an int: $int" },
+        (21 + 21)    => -> $int { "a special int" }
+    )
+);
+say $map.dispatch("foo","lorem");
+say $map.dispatch("foo",42);
+my $block = $map.get("foo","lorem");
 ```
 
 The main use of a DispatchMap is to create method signatures at
