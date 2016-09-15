@@ -71,8 +71,8 @@ my $block = $map.get("foo","lorem");
 
 The main use of a DispatchMap is to create method signatures at
 runtime that dispatch in the same order as normal methods. Internally,
-DispatchMap creates types at runtime and attaches methods to them with
-signatures created from the keys.
+DispatchMap creates new meta-objects at runtime and attaches methods to them with
+signatures created from the keys with nqp.
 
 ## Methods
 
