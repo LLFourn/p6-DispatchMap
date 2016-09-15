@@ -181,7 +181,7 @@ Dispatches to a namespace, returning the values that match the capture in order 
 (internally uses [cando](https://docs.perl6.org/type/Routine#method_cando)). The capture
 of the arguments after the namespace is used as the key.
 
-### append(*%new-values)
+### append(*%namespaces)
 ``` perl6
 my $map = DispatchMap.new( my-namespace => ((Int,Array) => "Foo", (Cool) => "Bar") );
 $map.append(my-namespace => ((Real,Real) => "Super Real!"));
