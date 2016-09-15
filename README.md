@@ -43,6 +43,7 @@ logic in a map like interface.
 The following are different ways of achieving the same result:
 
 ``` perl6
+# Using builtin dispatchers
 class Stuff {
     multi method foo(Str:D $str) { "a string: $str" }
     multi method foo(Int:D $int) { "an int: $int"   }
@@ -56,6 +57,7 @@ my $meth = Stuff.find_method("foo").cando(\("lorem"))[0];
 
 
 ```perl6
+# Using DispatchMap
 use DispatchMap;
 my $map = DispatchMap.new(
     foo => (
