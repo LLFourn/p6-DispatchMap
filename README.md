@@ -44,31 +44,45 @@ The following are different ways of achieving the same result:
 
 ``` perl6
 # Using builtin dispatchers
-class Stuff {
+class Parent {
     multi method foo(Str:D $str) { "a string: $str" }
     multi method foo(Int:D $int) { "an int: $int"   }
     multi method foo(42)         { "a special int"  }
 }
 
-say Stuff.foo("lorem");
-say Stuff.foo(42);
+say Parent.foo("lorem");
+say Parent.foo(42);
 my $meth = Stuff.find_method("foo").cando(\("lorem"))[0];
+
+class Child is Parent {
+    multi method foo(π) { "pi"  }
+}
+
+say Child.foo(π);
+say Child.foo(42);
 ```
 
 
 ```perl6
 # Using DispatchMap
 use DispatchMap;
-my $map = DispatchMap.new(
+my $parent = DispatchMap.new(
     foo => (
         (Str:D) => -> $str { "a string: $str" },
         (Int:D) => -> $int { "an int: $int" },
         (21 + 21)    => -> $int { "a special int" }
     )
 );
-say $map.dispatch("foo","lorem");
-say $map.dispatch("foo",42);
+say $parent.dispatch("foo","lorem");
+say $parent.dispatch("foo",42);
 my $block = $map.get("foo","lorem");
+
+my $child = $parent.make-child(
+    foo => ( (π) => { "pi" } )
+);
+
+say $child.dispatch('foo',π);
+say $child.dispatch('foo',42);
 ```
 
 The main use of a DispatchMap is to create method signatures at
@@ -158,7 +172,7 @@ Returns a list of keys and values for a namespace.
 
 ``` perl6
 my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
-say $map.get(1,["one","two"]); #-> Foo
+say $map.get('foo',1,["one","two"]); #-> Foo
 ```
 
 Dispatches to a namespace, returning the associated value. The capture
@@ -196,12 +210,12 @@ Appends the values to the corresponding namespaces. Takes the arguments in the s
 
 ``` perl6
 my $map = DispatchMap.new(
-        abstract-join => (
-          (Str:D,Str:D) => { $^a ~ $^b },
-          (Iterable:D,Iterable:D) => { |$^a,|$^b },
-          (Numeric:D,Numeric:D) => { $^a + $^b }
-        )
-    );
+  abstract-join => (
+    (Str:D,Str:D) => { $^a ~ $^b },
+    (Iterable:D,Iterable:D) => { |$^a,|$^b },
+    (Numeric:D,Numeric:D) => { $^a + $^b }
+  )
+);
 
 say $map.dispatch('abstract-join',"foo","bar"),"foobar"; #-> foobar
 say $map.dispatch('abstract-join',<one two>,<three four>); #-> one two three four
