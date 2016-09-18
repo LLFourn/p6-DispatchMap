@@ -43,7 +43,7 @@ method keys(Str:D $ns)   { self.dispatcher($ns).candidates.map(*.key)   }
 method values(Str:D $ns) { self.dispatcher($ns).candidates.map(*.value) }
 method pairs(Str:D $ns)  { self.dispatcher($ns).candidates.map( { .key => .value } ) }
 
-method !compose(){ self.disp-obj.^compose }
+method compose(){ self.disp-obj.^compose; self; }
 
 method new(|c) {
     my $new = self.bless;
@@ -51,11 +51,9 @@ method new(|c) {
     $new;
 }
 
-method make-child(|c) {
-    my $new = self.bless;
-    $new.disp-obj.^add_parent(self.disp-obj);
-    $new.append(|c);
-    $new;
+method add-parent(DispatchMap:D $d) {
+    self.disp-obj.^add_parent($d.disp-obj);
+    self;
 }
 
 method dispatcher(Str:D $ns) { $!disp-obj.^find_method("__$ns"); }
@@ -86,7 +84,7 @@ method append(*%ns) {
             self!add-dispatch($ns,$k,$v);
         }
     }
-    self!compose;
+    self;
 }
 
 method list(Str:D $ns)  { self.pairs($ns).map({slip .key,.value }).list }

@@ -7,7 +7,7 @@ A map that uses Perl 6 multi dispatch to link keys to values
 ``` perl6
 need DispatchMap;
 
-my $map = DispatchMap.new:
+my $map = DispatchMap.new(
          foo => (
            (Int) =>  "an Int!",
            (subset :: of Int:D where * > 5) => "Wow, an Int greater than 5",
@@ -17,7 +17,7 @@ my $map = DispatchMap.new:
            (Stringy)         => "something stringy",
            (Str,Str)         => "two strings";
          ),
-         bar => ( (τ) => "Tau > pi" );
+         bar => ( (τ) => "Tau > pi" )).compose;
 
 say $map.get("foo",2); #-> an Int!
 say $map.get("foo",6); #-> Wow, an Int greater than 5
@@ -72,14 +72,15 @@ my $parent = DispatchMap.new(
         (Int:D) => -> $int { "an int: $int" },
         (21 + 21)    => -> $int { "a special int" }
     )
-);
+).compose;
+
 say $parent.dispatch("foo","lorem");
 say $parent.dispatch("foo",42);
 my $block = $map.get("foo","lorem");
 
-my $child = $parent.make-child(
+my $child = DispatchMap.new(
     foo => ( (π) => { "pi" } )
-);
+).add-parent($parent).compose;
 
 say $child.dispatch('foo',π);
 say $child.dispatch('foo',42);
@@ -87,8 +88,9 @@ say $child.dispatch('foo',42);
 
 The main use of a DispatchMap is to create method signatures at
 runtime that dispatch in the same order as normal methods. Internally,
-DispatchMap creates new meta-objects at runtime and attaches methods to them with
-signatures created from the keys with nqp.
+DispatchMap creates new meta-objects at runtime and attaches methods
+to them with signatures created from the keys with nqp. As a result,
+`.compose` must be called before the DispatchMap can be used
 
 ## Methods
 
@@ -120,53 +122,68 @@ will be used as the nominal type of the parameter. If a literal is
 passed the `.WHAT` of the object is used as the nominal type and the
 literal is used as a `where` constraint.
 
+**note** you won't be able to use the map until you've called `compose`.
+
+### compose
+
+``` perl6
+my $map = DispatchMap.new(
+  foo => ((Int,Array) => "Foo", (Cool) => "Bar") ),
+  bar => ((Str) => "Baz")
+).compose;
+```
+
+Composes the dispatcher.
+
 ### namespaces
 
 ``` perl6
 my $map = DispatchMap.new(
   foo => ((Int,Array) => "Foo", (Cool) => "Bar") ),
   bar => ((Str) => "Baz")
-);
+).compose;
 say $map.namespaces; #-> foo, bar
 ```
 
-Gets the all the namespaces in the DispatchMap.
+Gets the all the namespaces in the DispatchMap. Won't work until
+`.compose` has been called.
 
 ### keys(Str:D $ns)
 
 ```perl6
-my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
+my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") ).compose;
 say $map.keys('foo'); #-> (Int,Array),(Cool)
 ```
 
-Gets the keys for a namepsace as a list of lists
+Gets the keys for a namepsace as a list of lists. Won't work until
+`.compose` has been called.
 
 ### values(Str:D $ns)
 
 ```perl6
-my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
+my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") ).compose;
 say $map.values('foo'); #-> (Int,Array),(Cool)
 ```
 
-Gets the values for a namepace.
+Gets the values for a name pace. Won't work until `.compose` has been called.
 
 ### pairs(Str:D $ns)
 
 ```perl6
-my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
+my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") ).compose;
 say $map.pairs('foo'); #-> (Int,Array) => "Foo",(Cool) => "Bar"
 ```
 
-Gets the key-value pairs for a namespace.
+Gets the key-value pairs for a namespace. Won't work until `.compose` has been called.
 
 ### list(Str:D $ns)
 
 ```perl6
-my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
+my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") ).compose;
 say $map.list('foo'); #-> (Int,Array),"Foo",(Cool),"Bar"
 ```
 
-Returns a list of keys and values for a namespace.
+Returns a list of keys and values for a namespace. Won't work until `.compose` has been called.
 
 ### get(Str:D $ns,|c)
 
@@ -178,6 +195,8 @@ say $map.get('foo',1,["one","two"]); #-> Foo
 Dispatches to a namespace, returning the associated value. The capture
 of the arguments after the namespace is used as the key.
 
+Won't work until `.compose` has been called.
+
 ### get-all(Str:D $ns,|c)
 
 ``` perl6
@@ -188,23 +207,26 @@ my $map = DispatchMap.new(
     Int => "An int",
     (π)  => "pi"
   )
-);
+).compose;
 say $map.get-all('number-types',π); # "pi", "Real", "Numeric";
 ```
-
 
 Dispatches to a namespace, returning the values that match the capture in order of narrowness
 (internally uses [cando](https://docs.perl6.org/type/Routine#method_cando)). The capture
 of the arguments after the namespace is used as the key.
 
+Won't work until `.compose` has been called.
+
 ### append(*%namespaces)
 ``` perl6
 my $map = DispatchMap.new( my-namespace => ((Int,Array) => "Foo", (Cool) => "Bar") );
-$map.append(my-namespace => ((Real,Real) => "Super Real!"));
+$map.append(my-namespace => ((Real,Real) => "Super Real!")).compose;
 say $map.get('my-namespace',π,τ); #-> Super Real!
 ```
 
-Appends the values to the corresponding namespaces. Takes the arguments in the same format as `.new`.
+Appends the values to the corresponding namespaces. Takes the
+arguments in the same format as `.new`. The values won't be available
+until `.compose` has been called.
 
 ### dispatch(Str:D $ns,|c)
 
@@ -215,7 +237,7 @@ my $map = DispatchMap.new(
     (Iterable:D,Iterable:D) => { |$^a,|$^b },
     (Numeric:D,Numeric:D) => { $^a + $^b }
   )
-);
+).compose;
 
 say $map.dispatch('abstract-join',"foo","bar"),"foobar"; #-> foobar
 say $map.dispatch('abstract-join',<one two>,<three four>); #-> one two three four
@@ -225,7 +247,9 @@ say $map.dispatch('abstract-join',1,2); #-> 3
 `.dispatch` works like `.get` except the if the result is a `Callable`
 it will invoke it with the arguments you pass to `.dispatch`.
 
-### make-child(*%namespaces)
+Won't work until `.compose` has been called.
+
+### add-parent(DispatchMap:D $parent)
 
 ``` perl6
 my $parent = DispatchMap.new(
@@ -233,13 +257,18 @@ my $parent = DispatchMap.new(
     (Numeric) => "A number",
     (Int) => "An int",
   )
-);
+).compose;
 
-my $child = $parent.make-child(
+my $child = DispatchMap.new(
   number-types => ( (π) => "pi" ),
-);
+).add-parent($parent).compose;
 
 say $child.get('number-types',3.14); #-> A number
 say $parent.get('number-types',π); #-> A number
 say $child.get('number-types',π); #-> pi
 ```
+
+Makes another DispatchMap the parent of the DispatchMap. This means
+the internal object used to hang methods on will inherit from the parent.
+
+Will result in an error if `.compose` has already been called.
