@@ -3,6 +3,10 @@ unit class DispatchMap does Associative;
 has $.disp-obj = Metamodel::ClassHOW.new_type();
 has $!dispatcher;
 
+my role Dispatcher {
+    has %.meta;
+}
+
 method !add-dispatch($ns,@key,$value) {
     use nqp;
     my role Candidate {
@@ -45,9 +49,9 @@ method pairs(Str:D $ns)  { self.dispatcher($ns).candidates.map( { .key => .value
 
 method compose(){ self.disp-obj.^compose; self; }
 
-method new(|c) {
+method new(*%ns) {
     my $new = self.bless;
-    $new.append(|c);
+    $new.append(|%ns);
     $new;
 }
 
@@ -84,6 +88,21 @@ method append(*%ns) {
             self!add-dispatch($ns,$k,$v);
         }
     }
+    self;
+}
+
+method ns-meta(Str:D $ns) {
+    if self.dispatcher($ns) -> $d {
+        $d does Dispatcher if $d !~~ Dispatcher;
+        return $d.meta;
+    }
+}
+
+method override(*%ns) {
+    for %ns.keys -> $ns {
+        $!disp-obj.^add_method("__$ns",(my proto anon (|) {*}).clone);
+    }
+    self.append(|%ns);
     self;
 }
 

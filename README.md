@@ -245,9 +245,27 @@ say $map.dispatch('abstract-join',1,2); #-> 3
 ```
 
 `.dispatch` works like `.get` except the if the result is a `Callable`
-it will invoke it with the arguments you pass to `.dispatch`.
+it will invoke it with the arguments you pass to `.dispatch` and return the result.
 
 Won't work until `.compose` has been called.
+
+### ns-meta(Str:D $ns --> Hash:D)
+
+``` perl6
+my $map = DispatchMap.new(
+   foo => (
+     (Real,Str) => "real str",
+     (Int,Str) => "int str",
+   ),
+   bar => ((Int,Int) => "int int")
+).compose;
+
+$map.ns-meta('foo')<bar> = "some metadata entry";
+```
+
+Returns a hash associated with the given namespace for metadata
+storage. This is mostly here for convenience, but it can be useful because it
+is inherited by child DipatchMaps.
 
 ### add-parent(DispatchMap:D $parent)
 
@@ -272,3 +290,26 @@ Makes another DispatchMap the parent of the DispatchMap. This means
 the internal object used to hang methods on will inherit from the parent.
 
 Will result in an error if `.compose` has already been called.
+
+### override(*%namespaces)
+
+``` perl6
+my $parent = DispatchMap.new(
+  number-types => (
+    (Numeric) => "A number",
+    (Int) => "An int",
+  )
+).compose;
+
+my $child = DispatchMap.new
+.add-parent($parent)
+.override( number-types => ( (π) => "pi" ) )
+.compose;
+
+
+say $child.get('number-types',3.14); #-> Nil
+say $child.get('number-types',π); #-> pi
+```
+
+Overrides the dispatcher for a namepsace rather than adding to
+it. This also overrides the hash returned by `.ns-meta`.
