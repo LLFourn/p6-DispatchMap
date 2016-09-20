@@ -59,9 +59,10 @@ plan 16;
         )
     ).compose;
 
-    my $child = DispatchMap.new(
-        number-types => ( (π) => "pi" ),
-    ).add-parent($parent).compose;
+    my $child = DispatchMap.new
+    .add-parent($parent)
+    .append(number-types => ( (π) => "pi" ))
+    .compose;
 
     is $child.get('number-types',3.14), 'A number';
     is $parent.get('number-types',π), 'A number';

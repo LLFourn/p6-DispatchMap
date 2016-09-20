@@ -43,9 +43,9 @@ method !add-dispatch($ns,@key,$value) {
     $value;
 }
 
-method keys(Str:D $ns)   { self.dispatcher($ns).candidates.map(*.key)   }
-method values(Str:D $ns) { self.dispatcher($ns).candidates.map(*.value) }
-method pairs(Str:D $ns)  { self.dispatcher($ns).candidates.map( { .key => .value } ) }
+method keys(Str:D $ns)   { self.dispatcher($ns).candidates.map(*.key).list   }
+method values(Str:D $ns) { self.dispatcher($ns).candidates.map(*.value).list }
+method pairs(Str:D $ns)  { self.dispatcher($ns).candidates.map( { .key => .value } ).list }
 
 method compose(){ self.disp-obj.^compose; self; }
 
@@ -75,6 +75,7 @@ method exists(Str:D $ns,|c)  { self.dispatcher($ns).?cando(c)[0]:exists }
 
 method append(*%ns) {
     for %ns.kv -> $ns, $args {
+        self!vivify-dispatcher($ns);
         my $i = $args.iterator;
         until (my $k := $i.pull-one) =:= IterationEnd {
             my $v;
@@ -97,12 +98,20 @@ method ns-meta(Str:D $ns) is rw {
     return-rw $d.meta;
 }
 
+method !make-dispatcher { (my proto anon (|) {*}).derive_dispatcher }
+
+method !vivify-dispatcher(Str:D $ns) {
+    my $dispatcher = $!disp-obj.^find_method("__$ns");
+    if not $dispatcher {
+       $dispatcher = self!make-dispatcher;
+       $!disp-obj.^add_method("__$ns",$dispatcher);
     }
+    $dispatcher;
 }
 
 method override(*%ns) {
     for %ns.keys -> $ns {
-        $!disp-obj.^add_method("__$ns",(my proto anon (|) {*}).clone);
+        $!disp-obj.^add_method("__$ns",self!make-dispatcher);
     }
     self.append(|%ns);
     self;

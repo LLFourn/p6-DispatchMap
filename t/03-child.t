@@ -12,10 +12,10 @@ plan 3;
         )
     ).compose;
 
-    my $child = DispatchMap.new( foo => (
+    my $child = DispatchMap.new.add-parent($parent).append(foo => (
         (Int,Int) => "int int",
         (42,Str)  => "42 str",
-    )).add-parent($parent).compose;
+    )).compose;
 
     is $child.get("foo",41,"str"),"int str","add-parent key still works in child";
     is $child.get("foo",42,42),"int int", "add-parent 1. child only key works";

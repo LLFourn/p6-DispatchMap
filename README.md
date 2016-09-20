@@ -78,9 +78,11 @@ say $parent.dispatch("foo","lorem");
 say $parent.dispatch("foo",42);
 my $block = $map.get("foo","lorem");
 
-my $child = DispatchMap.new(
-    foo => ( (π) => { "pi" } )
-).add-parent($parent).compose;
+my $child = DispatchMap.new
+.add-parent($parent)
+.append(foo => ( (π) => { "pi" } ))
+.compose;
+
 
 say $child.dispatch('foo',π);
 say $child.dispatch('foo',42);
@@ -188,7 +190,7 @@ Returns a list of keys and values for a namespace. Won't work until `.compose` h
 ### get(Str:D $ns,|c)
 
 ``` perl6
-my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") );
+my $map = DispatchMap.new( foo => ((Int,Array) => "Foo", (Cool) => "Bar") ).compose;
 say $map.get('foo',1,["one","two"]); #-> Foo
 ```
 
@@ -196,6 +198,8 @@ Dispatches to a namespace, returning the associated value. The capture
 of the arguments after the namespace is used as the key.
 
 Won't work until `.compose` has been called.
+
+**note** this method won't dispatch properly until after `.compose` has been called
 
 ### get-all(Str:D $ns,|c)
 
@@ -215,18 +219,7 @@ Dispatches to a namespace, returning the values that match the capture in order 
 (internally uses [cando](https://docs.perl6.org/type/Routine#method_cando)). The capture
 of the arguments after the namespace is used as the key.
 
-Won't work until `.compose` has been called.
-
-### append(*%namespaces)
-``` perl6
-my $map = DispatchMap.new( my-namespace => ((Int,Array) => "Foo", (Cool) => "Bar") );
-$map.append(my-namespace => ((Real,Real) => "Super Real!")).compose;
-say $map.get('my-namespace',π,τ); #-> Super Real!
-```
-
-Appends the values to the corresponding namespaces. Takes the
-arguments in the same format as `.new`. The values won't be available
-until `.compose` has been called.
+**note** this method won't dispatch properly until after `.compose` has been called
 
 ### dispatch(Str:D $ns,|c)
 
@@ -244,12 +237,25 @@ say $map.dispatch('abstract-join',<one two>,<three four>); #-> one two three fou
 say $map.dispatch('abstract-join',1,2); #-> 3
 ```
 
+**note** this method won't dispatch properly until after `.compose` has been called
+
+### append(*%namespaces)
+``` perl6
+my $map = DispatchMap.new( my-namespace => ((Int,Array) => "Foo", (Cool) => "Bar") );
+$map.append(my-namespace => ((Real,Real) => "Super Real!")).compose;
+say $map.get('my-namespace',π,τ); #-> Super Real!
+```
+
+Appends the values to the corresponding namespaces. Takes the
+arguments in the same format as `.new`.
+
+**note** this method won't affect dispatching until `.compose` is called
+
 `.dispatch` works like `.get` except the if the result is a `Callable`
 it will invoke it with the arguments you pass to `.dispatch` and return the result.
 
-Won't work until `.compose` has been called.
 
-### ns-meta(Str:D $ns --> Hash:D)
+### ns-meta(Str:D $ns) is rw
 
 ``` perl6
 my $map = DispatchMap.new(
@@ -260,12 +266,17 @@ my $map = DispatchMap.new(
    bar => ((Int,Int) => "int int")
 ).compose;
 
-$map.ns-meta('foo')<bar> = "some metadata entry";
+$map.ns-meta('foo') = "foo stores some number and string dispatches";
+$map.ns-meta('bar') = "bar just has some ints";
+
 ```
 
-Returns a hash associated with the given namespace for metadata
-storage. This is mostly here for convenience, but it can be useful because it
-is inherited by child DipatchMaps.
+Returns a writeable container associated with the given namespace. You
+can think of this a map that runs in parallel to the dispatching
+map. it is inherited by child DipatchMaps and overwritten by
+`.override`.
+
+`ns-meta` will work before or after `.compose` has been called.
 
 ### add-parent(DispatchMap:D $parent)
 
@@ -277,9 +288,10 @@ my $parent = DispatchMap.new(
   )
 ).compose;
 
-my $child = DispatchMap.new(
-  number-types => ( (π) => "pi" ),
-).add-parent($parent).compose;
+my $child = DispatchMap.new
+.add-parent($parent)
+.append( number-types => ( (π) => "pi" ),)
+.compose;
 
 say $child.get('number-types',3.14); #-> A number
 say $parent.get('number-types',π); #-> A number
@@ -289,7 +301,7 @@ say $child.get('number-types',π); #-> pi
 Makes another DispatchMap the parent of the DispatchMap. This means
 the internal object used to hang methods on will inherit from the parent.
 
-Will result in an error if `.compose` has already been called.
+**note** Will error if `.compose` has already been called.
 
 ### override(*%namespaces)
 
@@ -312,4 +324,6 @@ say $child.get('number-types',π); #-> pi
 ```
 
 Overrides the dispatcher for a namepsace rather than adding to
-it. This also overrides the hash returned by `.ns-meta`.
+it. Overridden namespaces also have their `.ns-meta` cleared.
+
+**note** this method won't affect dispatching until `.compose` is called
