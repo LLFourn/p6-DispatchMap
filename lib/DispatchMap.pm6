@@ -4,7 +4,7 @@ has $.disp-obj = Metamodel::ClassHOW.new_type();
 has $!dispatcher;
 
 my role Dispatcher {
-    has %.meta;
+    has $.meta is rw;
 }
 
 method !add-dispatch($ns,@key,$value) {
@@ -91,10 +91,12 @@ method append(*%ns) {
     self;
 }
 
-method ns-meta(Str:D $ns) {
-    if self.dispatcher($ns) -> $d {
-        $d does Dispatcher if $d !~~ Dispatcher;
-        return $d.meta;
+method ns-meta(Str:D $ns) is rw {
+    my $d = self!vivify-dispatcher($ns);
+    $ = ($d does Dispatcher if $d !~~ Dispatcher);
+    return-rw $d.meta;
+}
+
     }
 }
 
