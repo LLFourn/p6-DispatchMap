@@ -15,11 +15,11 @@ method !add-dispatch($ns,@key,$value) {
     }
 
     my $params := nqp::list();
-    my $i := 0;
+
     for @key {
         my $param := Parameter.new;
         my $nominal-type := do if .defined {
-            nqp::bindattr($param,Parameter,'$!post_constraints',nqp::list(nqp::decont($_)));
+            nqp::bindattr($param,Parameter,'@!post_constraints',nqp::list(nqp::decont($_)));
             # use the :D of the type. Rakudo caches it.
             Metamodel::DefiniteHOW.new_type(:base_type(.WHAT),:definite);
         } else {
@@ -28,13 +28,12 @@ method !add-dispatch($ns,@key,$value) {
         nqp::bindattr($param,Parameter,'$!nominal_type',nqp::decont($nominal-type));
         nqp::bindattr_i($param,Parameter,'$!flags',128);
         nqp::push($params,$param);
-        $i := $i + 1;
     }
     my $method := anon sub {};
     my $sig := $method.signature.clone;
-    nqp::bindattr($sig,Signature,'$!params',$params);
-    nqp::bindattr($sig,Signature,'$!count',$i);
-    nqp::bindattr($sig,Signature,'$!arity',$i);
+    nqp::bindattr($sig,Signature,'@!params',$params);
+    nqp::bindattr($sig,Signature,'$!count',@key.elems);
+    # nqp::bindattr($sig,Signature,'$!arity',@key.elems); # not working atm
     $method does Candidate;
     $method.key   = @key;
     $method.value = $value;
