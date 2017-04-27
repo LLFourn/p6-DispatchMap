@@ -1,5 +1,6 @@
 {
     "name" : "DispatchMap",
+    "license" : "MIT",
     "perl" : "6.*",
     "version" : "0.2.3",
     "description" : "A map that uses Perl 6 multi dispatch to link keys to values",
