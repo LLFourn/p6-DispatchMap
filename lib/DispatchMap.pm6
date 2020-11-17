@@ -1,8 +1,10 @@
 unit class DispatchMap does Associative;
 
 BEGIN {
-    die "DispatchMap is currenly only works with Rakudo compiler" unless $*RAKU.compiler.name eq 'rakudo';
+    die "DispatchMap currenly works with Rakudo compiler only" unless ($*PERL // $*RAKU).compiler.name eq 'rakudo';
 }
+
+constant NEW-PARAM-VERSION = ($*PERL // $*RAKU).compiler.version >= v2020.10.104.g.1.f.090.e.04.d;
 
 has $.disp-obj = Metamodel::ClassHOW.new_type();
 has $!dispatcher;
@@ -29,7 +31,7 @@ method !add-dispatch($ns,@key,$value) {
         } else {
             $_;
         }
-        if $*RAKU.compiler.version >= v2020.10.104.g.1.f.090.e.04.d {
+        if NEW-PARAM-VERSION {
             nqp::bindattr($param,Parameter,'$!type',nqp::decont($nominal-type));
         }
         else {
